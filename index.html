@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Socket.IO chat</title>
+    <script src="https://cdn.tiny.cloud/1/79v4atzma17mso0fsmd4kxcnt33i9581ff3qkhx9rzl1w2hc/tinymce/6/tinymce.min.js"
+        referrerpolicy="origin"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <style>
+        body {
+            margin: 0;
+            padding-bottom: 3rem;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        /* section#sct {
+            height: 50%;
+            width: 50%;
+        } */
+
+        #form {
+            background: rgba(0, 0, 0, 0.15);
+            padding: 0.25rem;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            height: 12rem;
+            box-sizing: border-box;
+            backdrop-filter: blur(10px);
+        }
+
+
+
+        #input {
+            border: none;
+            padding: 0 1rem;
+            flex-grow: 1;
+            border-radius: 2rem;
+            margin: 0.25rem;
+        }
+
+        #input:focus {
+            outline: none;
+        }
+
+        #form>button {
+            background: #333;
+            border: none;
+            padding: 0 1rem;
+            margin: 0.25rem;
+            border-radius: 3px;
+            outline: none;
+            color: #fff;
+        }
+
+        #messages {
+            list-style-type: none;
+            /* width: 70em; */
+            margin: 0;
+            padding: 0;
+            padding-bottom: 9em;
+        }
+
+        #messages>li {
+            padding: 0.5rem 1rem;
+        }
+
+        #messages>li:nth-child(odd) {
+            background: #efefef;
+        }
+    </style>
+</head>
+
+<body>
+    <section class="row" id="sct">
+        <ul class="col-12" id="messages"></ul>
+        <!-- <h1>op</h1> -->
+    </section>
+
+
+
+
+    <form id="form" action="">
+        <!-- <textarea class="tinymce" id="input" placeholder="Chat comes here...." autocomplete="off"> </textarea> -->
+        <input id="input" class="tinymce" autocomplete="off" />
+        <button>Send</button>
+    </form>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        var socket = io();
+
+        var name = new String(prompt('Enter your name-'));
+        // var content = editor.getContent();
+        socket.emit('new-user-joined', name.bold());
+
+        var messages = document.getElementById('messages');
+        var form = document.getElementById('form');
+        // var content = document.getElementById('input');
+
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            var editor = tinymce.get('input');
+            var content = editor.getContent();
+            if (content) {
+                socket.emit('chat message', content);
+                // input.value = '';
+                editor.setContent("");
+
+            }
+        });
+        socket.on('chat message', function (msg) {
+            var item = document.createElement('li');
+            item.innerHTML = msg;
+            messages.appendChild(item);
+            window.scrollTo(0, document.body.scrollHeight);
+        });
+
+        socket.on('new-user-joined', function (msg) {
+            var item = document.createElement('li');
+            item.setAttribute('id', msg[1]);
+            item.innerHTML = msg[0];
+            users.appendChild(item);
+            window.scrollTo(0, document.body.scrollHeight);
+        });
+
+        socket.on('left-the-chat', function (msg) {
+            var element = document.getElementById(msg);
+            element.parentNode.removeChild(element);
+
+            window.scrollTo(0, document.body.scrollHeight);
+        });
+
+    </script>
+    <script>
+        tinymce.init({
+            selector: '#input',
+            width: "100%",
+            height: "100%",
+            resize: true,
+            plugins: "image code link lists emoticons preview",
+            toolbar:
+                "bold italic underline strikethrough | forecolor | numlist bullist | link blockquote emoticons | image code",
+            menubar: false,
+            link_default_protocol: 'https',
+            statusbar: false,
+            toolbar_location: "up",
+            autoresize_bottom_margin: 0,
+            contextmenu: false,
+            setup: (ed) => {
+                editor = ed;
+            },
+        });
+    </script>
+</body>
+
+</html>
